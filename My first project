@@ -16,24 +16,23 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .calculator {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: rgb(244, 242, 242);
+            border-radius: 20px ;
+            box-shadow: 0 30px 60px rgba(14, 12, 12, 0.3);
             padding: 20px;
             width: 320px;
         }
 
         .display {
-            background: #1e1e1e;
-            color: #00ff00;
+            background: #edebeb;
+            color: #151515;
             font-size: 2.5rem;
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 10px ;
             text-align: right;
             margin-bottom: 20px;
             word-wrap: break-word;
@@ -41,6 +40,7 @@
             min-height: 60px;
             font-weight: bold;
             font-family: 'Courier New', monospace;
+            box-shadow: 0px 1px 1px #939292;
         }
 
         .buttons {
@@ -58,7 +58,7 @@
             font-weight: bold;
             transition: all 0.3s ease;
             background: #f0f0f0;
-            color: #333;
+            color: #1e1d1d;
         }
 
         button:hover {
@@ -71,8 +71,9 @@
         }
 
         .operator {
-            background: #667eea;
-            color: white;
+            border: 2px solid #e0e0e0;
+            background-color: white;
+             
         }
 
         .operator:hover {
@@ -80,23 +81,23 @@
         }
 
         .equals {
-            background: #48bb78;
+            background: #059943d3;
             color: white;
             grid-column: span 2;
         }
 
         .equals:hover {
-            background: #38a169;
+            background: #0b512c;
         }
 
         .clear {
-            background: #f56565;
+            background: #da7b6a;
             color: white;
-            grid-column: span 2;
+            grid-column: span 3;
         }
 
         .clear:hover {
-            background: #e53e3e;
+            background: #570909;
         }
 
         .number {
@@ -113,9 +114,9 @@
     <div class="calculator">
         <div class="display" id="display">0</div>
         <div class="buttons">
-            <button class="clear" onclick="clearDisplay()">AC</button>
+            <button class="clear" onclick="clearDisplay()">AC</button> 
             <button class="operator" onclick="appendOperator('/')">÷</button>
-            <button class="operator" onclick="appendOperator('*')">×</button>
+             
             
             <button class="number" onclick="appendNumber('7')">7</button>
             <button class="number" onclick="appendNumber('8')">8</button>
@@ -130,109 +131,71 @@
             <button class="number" onclick="appendNumber('1')">1</button>
             <button class="number" onclick="appendNumber('2')">2</button>
             <button class="number" onclick="appendNumber('3')">3</button>
-            <button class="operator" onclick="toggleSign()">±</button>
+            <button class="operator" onclick="appendOperator('*')">×</button>
             
-            <button class="number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+            <button class="number" onclick="appendNumber('0')" style="grid-column: span 1;">0</button>
             <button class="number" onclick="appendDecimal()">.</button>
             <button class="equals" onclick="calculate()">=</button>
+             
         </div>
     </div>
 
-    <script>
-        let display = document.getElementById('display');
-        let currentInput = '';
-        let operator = null;
-        let previousValue = '';
-        let shouldResetDisplay = false;
+   <script>
+    let display = document.getElementById("display");
+    let expression = "";
 
-        function appendNumber(num) {
-            if (shouldResetDisplay) {
-                currentInput = num;
-                shouldResetDisplay = false;
-            } else {
-                currentInput += num;
-            }
-            updateDisplay();
+    function appendNumber(num) {
+        if (display.innerText === "0") {
+            expression = num;
+        } else {
+            expression += num;
+        }
+        display.innerText = expression;
+    }
+
+    function appendOperator(op) {
+        if (expression === "") return;
+
+        let lastChar = expression.slice(-1);
+
+        // Prevent two operators in a row
+        if (["+","-","*","/"].includes(lastChar)) {
+            expression = expression.slice(0, -1);
         }
 
-        function appendOperator(op) {
-            if (currentInput === '') return;
-            
-            if (previousValue === '') {
-                previousValue = currentInput;
-            } else if (!shouldResetDisplay) {
-                calculate();
-            }
-            
-            operator = op;
-            shouldResetDisplay = true;
-            updateDisplay();
+        expression += op;
+        display.innerText = expression;
+    }
+
+    function appendDecimal() {
+        let parts = expression.split(/[\+\-\*\/]/);
+        let lastNumber = parts[parts.length - 1];
+
+        if (!lastNumber.includes(".")) {
+            expression += ".";
+            display.innerText = expression;
         }
+    }
 
-        function appendDecimal() {
-            if (shouldResetDisplay) {
-                currentInput = '0.';
-                shouldResetDisplay = false;
-            } else if (!currentInput.includes('.')) {
-                currentInput += '.';
-            }
-            updateDisplay();
+    function calculate() {
+        if (expression === "") return;
+
+        try {
+            let result = Function('"use strict";return (' + expression + ')')();
+            display.innerText = result;
+            expression = result.toString();
+        } catch {
+            display.innerText = "Error";
+            expression = "";
         }
+    }
 
-        function toggleSign() {
-            if (currentInput !== '') {
-                currentInput = String(parseFloat(currentInput) * -1);
-                updateDisplay();
-            }
-        }
+    function clearDisplay() {
+        expression = "";
+        display.innerText = "0";
+    }
+</script>
 
-        function calculate() {
-            if (operator === null || previousValue === '' || currentInput === '') {
-                return;
-            }
 
-            let result;
-            const prev = parseFloat(previousValue);
-            const current = parseFloat(currentInput);
-
-            switch (operator) {
-                case '+':
-                    result = prev + current;
-                    break;
-                case '-':
-                    result = prev - current;
-                    break;
-                case '*':
-                    result = prev * current;
-                    break;
-                case '/':
-                    result = current !== 0 ? prev / current : 'Error';
-                    break;
-                default:
-                    return;
-            }
-
-            currentInput = String(result);
-            operator = null;
-            previousValue = '';
-            shouldResetDisplay = true;
-            updateDisplay();
-        }
-
-        function clearDisplay() {
-            currentInput = '';
-            operator = null;
-            previousValue = '';
-            shouldResetDisplay = false;
-            updateDisplay();
-        }
-
-        function updateDisplay() {
-            display.textContent = currentInput || '0';
-        }
-
-        // Initialize display
-        updateDisplay();
-    </script>
 </body>
 </html>
